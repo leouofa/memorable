@@ -22,7 +22,7 @@
 
 ## Overview
 
-Software engineers and AI practitioners frequently manage long-lived user contexts, system guidelines, architecture decisions, and few-shot examples across disjointed scratchpads and temporary files.
+Software engineers and AI practitioners frequently manage long-lived user contexts, memories, architecture decisions, and persistent knowledge across disjointed notes and temporary files.
 
 **Memorable** is a dedicated, distraction-free desktop memory workbench designed to run locally. It provides a flat, uncluttered workspace for capturing, curating, previewing, and pinning critical instructions and knowledge—with instant one-click Markdown copying, live split-screen previewing, drag-and-drop context file attachments, and client-side pinned memory reordering.
 
