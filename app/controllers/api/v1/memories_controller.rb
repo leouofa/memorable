@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class MemoriesController < BaseController
-      before_action :set_memory, only: %i[show update destroy toggle_pin]
+      before_action :set_memory, only: %i[show update destroy toggle_pin neighbors generate_embedding]
 
       def index
         scope = Memory.all
@@ -10,15 +12,24 @@ module Api
           scope = params[:pinned].to_s == "true" ? scope.where(pinned: true) : scope.where(pinned: false)
         end
 
-        if params[:q].present?
-          scope = scope.search(params[:q])
-        end
+        search_mode = params[:mode].presence || "auto"
 
-        # Preserve pinned ordering if specifically requested or default recent
-        scope = if params[:pinned].to_s == "true"
-          scope.pinned
+        if params[:q].present?
+          if (search_mode == "semantic" || search_mode == "auto") && scope.embedded.exists?
+            begin
+              embedding_res = Llm::EmbeddingGenerator.call(params[:q])
+              scope = scope.embedded.nearest_neighbors(:embedding, embedding_res[:vector], distance: "cosine")
+            rescue StandardError => e
+              raise e if search_mode == "semantic"
+              scope = scope.search(params[:q])
+              scope = params[:pinned].to_s == "true" ? scope.pinned : scope.recent
+            end
+          else
+            scope = scope.search(params[:q])
+            scope = params[:pinned].to_s == "true" ? scope.pinned : scope.recent
+          end
         else
-          scope.recent
+          scope = params[:pinned].to_s == "true" ? scope.pinned : scope.recent
         end
 
         paginated_memories, meta = paginate_scope(scope)
@@ -77,6 +88,43 @@ module Api
         end
 
         render json: { status: "ok", message: "Pinned memories reordered successfully" }
+      end
+
+      def neighbors
+        limit = (params[:limit].presence || 10).to_i.clamp(1, 100)
+        unless @memory.embedded?
+          return render_error("Memory has not been embedded yet", status: :unprocessable_entity)
+        end
+
+        neighbors = Memory.where.not(id: @memory.id)
+                          .embedded
+                          .nearest_neighbors(:embedding, @memory.embedding, distance: "cosine")
+                          .limit(limit)
+
+        render json: {
+          status: "ok",
+          memory: memory_json(@memory),
+          neighbors: neighbors.map do |neighbor|
+            {
+              score: (1.0 - neighbor.try(:neighbor_distance).to_f).round(6),
+              memory: memory_json(neighbor, include_body: true)
+            }
+          end
+        }
+      end
+
+      def generate_embedding
+        if params[:async].to_s == "true"
+          GenerateEmbeddingJob.perform_later(@memory.id)
+          render json: { status: "ok", message: "Embedding generation enqueued" }
+        else
+          @memory.generate_embedding!
+          render json: {
+            status: "ok",
+            message: "Embedding generated successfully",
+            memory: memory_json(@memory)
+          }
+        end
       end
 
       private

@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -49,6 +50,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_000001) do
     t.integer "pinned_position"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.vector "embedding", limit: 1024
+    t.string "embedding_model"
+    t.datetime "embedded_at"
+    t.index ["embedding"], name: "index_memories_on_embedding", opclass: :vector_cosine_ops, using: :hnsw
     t.index ["pinned", "pinned_position"], name: "index_memories_on_pinned_and_pinned_position"
     t.index ["updated_at"], name: "index_memories_on_updated_at"
   end

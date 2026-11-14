@@ -14,6 +14,7 @@
   <a href="https://hotwired.dev"><img src="https://img.shields.io/badge/Hotwire-Turbo%208%20%2B%20Stimulus-F3722C?style=flat-square" alt="Hotwire"></a>
   <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-v4-8B5CF6?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS v4"></a>
   <a href="https://www.postgresql.org"><img src="https://img.shields.io/badge/PostgreSQL-16%2B-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+  <a href="https://github.com/pgvector/pgvector"><img src="https://img.shields.io/badge/pgvector-1024--dim%20HNSW-0284c7?style=flat-square&logo=postgresql&logoColor=white" alt="pgvector"></a>
   <img src="https://img.shields.io/badge/Architecture-Local--First-22c55e?style=flat-square" alt="Local-First Architecture">
   <a href="https://github.com/leouofa/memorable"><img src="https://img.shields.io/badge/API-OpenAPI%203.1-8B5CF6?style=flat-square" alt="OpenAPI 3.1"></a>
 </p>
@@ -34,6 +35,13 @@ Software engineers and AI practitioners frequently manage long-lived user contex
 - **Flat & Uncluttered**: No unnecessary hierarchy or project grouping—every memory is immediately accessible from the top-level workspace.
 - **Real-Time Search**: Instant filtering across memory headlines and Markdown content from the persistent sidebar.
 - **Fluid Pinning**: Pin critical context items to the top of your workspace and sidebar with drag-and-drop reordering.
+
+### 🔍 Vector Search & Semantic Embeddings (pgvector)
+- **Nearest-Neighbor Search**: 1024-dimensional semantic similarity powered by PostgreSQL `pgvector` with HNSW cosine similarity indexing (`vector_cosine_ops`).
+- **Hybrid & Semantic Querying**: Multi-mode search (`auto`, `semantic`, `keyword`) in both the Web UI and API to quickly surface conceptually related memories even when phrasing differs.
+- **Automatic & On-Demand Vectorization**: Automatically triggers background embedding generation on create or update via `ActiveJob` (`GenerateEmbeddingJob`), with one-click manual (re-)vectorization in the UI.
+- **Semantically Related Memories**: Surfaces nearest neighbor memories with cosine match percentages directly on the memory detail page.
+- **Pluggable Ollama / RubyLLM Backend**: Isolated `RubyLLM` context configured for local Ollama (`qwen3-embedding:0.6b` 1024-dim by default) or remote providers via environment variables.
 
 ### 📝 Markdown Editing with 3 View Modes
 - **Preview Mode**: Clean GitHub Flavored Markdown (GFM) rendering powered by `Redcarpet` with dark developer typography, syntax highlighting blocks, and GitHub-style tables.
@@ -74,6 +82,8 @@ Memorable is built on a lightweight, high-performance Rails 8 stack engineered f
 | :--- | :--- | :--- |
 | **Backend** | Ruby 3.4.4 / Rails 8.1.4 | Core MVC engine, Turbo stream responses, ActiveStorage services |
 | **Database** | PostgreSQL | Relational storage for memories, pinned positions, and attachments |
+| **Vector Search** | PostgreSQL `pgvector` + `neighbor` | 1024-dimensional HNSW cosine index, nearest-neighbor vector queries |
+| **Embeddings & AI** | RubyLLM + Ollama | Local vector embedding pipeline (`qwen3-embedding:0.6b` 1024-dim) |
 | **Frontend Reactive** | Hotwire (Turbo 8 + Stimulus) | SPA-speed transitions, frame updates, and modular JavaScript controllers |
 | **Styling** | Tailwind CSS v4 | High-performance compiled utility stylesheet in a violet/purple theme |
 | **Markdown Engine** | Redcarpet 3.6 | Server-side GitHub Flavored Markdown parsing with HTML sanitization |
@@ -91,14 +101,20 @@ flowchart TD
     end
 
     subgraph RailsApp["Rails 8.1 Application Server"]
-        Router["Rails Router (/memories & /api/v1/memories)"]
-        MC["MemoriesController & Api::V1::MemoriesController"]
+        Router["Rails Router (/memories, /api/v1/memories, /api/v1/search)"]
+        MC["MemoriesController & Api::V1 Controllers"]
+        Job["GenerateEmbeddingJob (ActiveJob / SolidQueue)"]
+        EG["Llm::EmbeddingGenerator (RubyLLM Context)"]
         MD["Redcarpet GFM Renderer"]
         AS["ActiveStorage Service Engine"]
     end
 
+    subgraph ExternalServices["Local AI & Vector Services"]
+        Ollama["Ollama API (/v1/embeddings)\nqwen3-embedding:0.6b (1024-dim)"]
+    end
+
     subgraph DataStore["Data & Persistence"]
-        PG[("PostgreSQL\n(memories, attachments)")]
+        PG[("PostgreSQL + pgvector\n(memories, HNSW vector index, attachments)")]
         DiskStorage[("ActiveStorage Disk / Blob Storage")]
     end
 
@@ -108,6 +124,10 @@ flowchart TD
     Router --> MC
     MC --> MD
     MC --> AS
+    MC --> EG
+    MC --> Job
+    Job --> EG
+    EG <--> Ollama
     MC <--> PG
     AS <--> DiskStorage
 ```
@@ -128,7 +148,8 @@ flowchart TD
 
 ### Prerequisites
 - **Ruby**: `3.4.4` (managed via `rbenv`, `asdf`, or `mise`)
-- **PostgreSQL**: `14+` running locally
+- **PostgreSQL**: `14+` running locally with the `vector` (`pgvector`) extension installed
+- **Ollama**: running locally with the `qwen3-embedding:0.6b` model (`ollama pull qwen3-embedding:0.6b`)
 - **Bundler**: `bundle -v`
 
 ### 1. Clone the Repository
@@ -137,7 +158,16 @@ git clone https://github.com/leouofa/memorable.git
 cd memorable
 ```
 
-### 2. Setup Dependencies & Database
+### 2. Configure Environment (Optional)
+Copy `.env.example` to `.env` if you want to customize your embedding endpoint:
+```bash
+cp .env.example .env
+# Defaults:
+# EMBEDDING_API_BASE=http://localhost:11434/v1
+# EMBEDDING_MODEL=qwen3-embedding:0.6b
+```
+
+### 3. Setup Dependencies & Database
 Run the setup script to install gems, prepare the database, and compile assets:
 ```bash
 bin/setup
@@ -149,13 +179,13 @@ bundle install
 bin/rails db:prepare
 ```
 
-### 3. Seed Sample Data (Optional)
+### 4. Seed Sample Data (Optional)
 Populate sample memories, markdown guides, and context notes:
 ```bash
 bin/rails db:seed
 ```
 
-### 4. Start the Development Server
+### 5. Start the Development Server
 Launch the unified Tailwind watcher and Puma server:
 ```bash
 bin/dev
@@ -200,11 +230,14 @@ Memorable includes a complete versioned RESTful JSON API (`/api/v1`) with full O
 | `GET` | `/api/v1/stats` | System statistics (total memories, pinned memories, attachments) |
 | `GET` | `/api/v1/openapi` | OpenAPI 3.1.0 schema specification |
 | `POST` | `/api/v1/markdown/render` | Render raw Markdown text to sanitized HTML |
-| `GET` | `/api/v1/memories` | List memories (filter by `pinned`, `q`, pagination `limit`/`offset`) |
+| `GET` | `/api/v1/search` | Unified pgvector semantic and keyword search across memories (`q`, `mode=auto\|semantic\|keyword`, `limit`) |
+| `GET` | `/api/v1/memories` | List memories (filter by `pinned`, `q`, `mode=auto\|semantic\|keyword`, pagination `limit`/`offset`) |
 | `POST` | `/api/v1/memories` | Create a new memory |
 | `GET` | `/api/v1/memories/:id` | Get memory details (`?render_markdown=true` for HTML) |
 | `PATCH` | `/api/v1/memories/:id` | Update a memory |
 | `DELETE` | `/api/v1/memories/:id` | Delete a memory |
+| `GET` | `/api/v1/memories/:id/neighbors` | Find nearest semantic neighbors of a memory via pgvector cosine distance (`limit`) |
+| `POST` | `/api/v1/memories/:id/generate_embedding` | Generate or refresh vector embedding for a memory (`?async=true` for background job) |
 | `PATCH` | `/api/v1/memories/:id/toggle_pin` | Toggle pinned state of a memory |
 | `PATCH` | `/api/v1/memories/reorder_pinned` | Reorder pinned memories (`{ memory_ids: [...] }`) |
 | `GET` | `/api/v1/memories/:id/attachments` | List memory attachments with metadata and URLs |

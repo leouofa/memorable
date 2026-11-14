@@ -1,7 +1,13 @@
+# frozen_string_literal: true
+
 class Memory < ApplicationRecord
+  include Embeddable
+
   has_many_attached :files
 
   validates :title, presence: true
+
+  after_commit :enqueue_generate_embedding, on: %i[create update], if: :saved_change_to_embedding_content?
 
   scope :recent, -> { order(updated_at: :desc) }
   scope :pinned, -> { where(pinned: true).order(Arel.sql("pinned_position ASC NULLS LAST, updated_at DESC")) }
@@ -10,6 +16,10 @@ class Memory < ApplicationRecord
     where("title ILIKE :q OR body ILIKE :q", q: "%#{sanitize_sql_like(query.to_s.strip)}%")
   }
 
+  def embedding_input
+    [ "Title: #{title}", body.presence ].compact.join("\n\n")
+  end
+
   def toggle_pin!
     if pinned?
       update!(pinned: false, pinned_position: nil)
@@ -17,5 +27,15 @@ class Memory < ApplicationRecord
       max_pos = Memory.where(pinned: true).maximum(:pinned_position) || 0
       update!(pinned: true, pinned_position: max_pos + 1)
     end
+  end
+
+  private
+
+  def saved_change_to_embedding_content?
+    saved_change_to_title? || saved_change_to_body?
+  end
+
+  def enqueue_generate_embedding
+    GenerateEmbeddingJob.perform_later(id)
   end
 end

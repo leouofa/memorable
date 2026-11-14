@@ -33,7 +33,8 @@ module Api
         limit = max_limit if limit > max_limit || limit <= 0
         offset = [ params[:offset].to_i, 0 ].max
 
-        [ scope.offset(offset).limit(limit), { limit: limit, offset: offset, total_count: scope.count } ]
+        total_count = scope.unscope(:select).count
+        [ scope.offset(offset).limit(limit), { limit: limit, offset: offset, total_count: total_count } ]
       end
 
       def memory_json(memory, include_body: true, render_markdown: false, include_attachments: false)
@@ -43,6 +44,9 @@ module Api
           pinned: memory.pinned?,
           pinned_position: memory.pinned_position,
           attachments_count: memory.files.count,
+          embedded: memory.embedded?,
+          embedding_model: memory.embedding_model,
+          embedded_at: memory.embedded_at&.iso8601,
           created_at: memory.created_at&.iso8601,
           updated_at: memory.updated_at&.iso8601
         }

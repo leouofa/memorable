@@ -2,13 +2,20 @@
   <!-- Top Header & Controls -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
     <div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl font-bold tracking-tight text-white">
           <%= params[:q].present? ? "Search: \"#{params[:q]}\"" : "All Memories" %>
         </h1>
         <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-neutral-800 text-neutral-400 border border-neutral-700/60">
           <%= @memories.size %>
         </span>
+        <% if params[:q].present? %>
+          <div class="flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded-lg p-0.5 text-[11px] font-mono">
+            <%= link_to "Auto", memories_path(q: params[:q], mode: "auto"), class: "px-2 py-0.5 rounded #{params[:mode].blank? || params[:mode] == 'auto' ? 'bg-violet-600 text-white font-semibold' : 'text-neutral-400 hover:text-white'}" %>
+            <%= link_to "Semantic", memories_path(q: params[:q], mode: "semantic"), class: "px-2 py-0.5 rounded #{params[:mode] == 'semantic' ? 'bg-violet-600 text-white font-semibold' : 'text-neutral-400 hover:text-white'}" %>
+            <%= link_to "Keyword", memories_path(q: params[:q], mode: "keyword"), class: "px-2 py-0.5 rounded #{params[:mode] == 'keyword' ? 'bg-violet-600 text-white font-semibold' : 'text-neutral-400 hover:text-white'}" %>
+          </div>
+        <% end %>
       </div>
       <p class="text-xs text-neutral-400 mt-1 font-mono">
         <%= params[:q].present? ? "Showing matching memories across titles and markdown content" : "Saved context and long-term memory records" %>

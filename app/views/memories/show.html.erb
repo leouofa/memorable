@@ -34,10 +34,21 @@
         </h1>
       </div>
 
-      <div class="flex items-center gap-2 mt-1.5">
+      <div class="flex items-center gap-2 mt-1.5 flex-wrap">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono bg-violet-950/70 text-violet-400 border border-violet-800/50">
           Memory
         </span>
+
+        <% if @memory.embedded? %>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950/70 text-emerald-400 border border-emerald-800/50" title="Embedded <%= time_ago_in_words(@memory.embedded_at) if @memory.embedded_at %> ago">
+            <svg class="w-2 h-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+            Vectorized (<%= @memory.embedding_model %>)
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-neutral-800 text-neutral-400 border border-neutral-700/60">
+            Unembedded
+          </span>
+        <% end %>
 
         <span class="text-neutral-600 text-xs font-mono">•</span>
         <span class="text-xs text-neutral-500 font-mono">Updated <%= time_ago_in_words(@memory.updated_at) %> ago</span>
@@ -46,6 +57,17 @@
 
     <!-- Actions Toolbar -->
     <div class="flex items-center gap-2 flex-wrap">
+      <!-- Generate / Update Vector Embedding Button -->
+      <%= button_to generate_embedding_memory_path(@memory),
+                    method: :post,
+                    title: @memory.embedded? ? "Refresh vector embedding" : "Generate vector embedding",
+                    class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700/60 shadow-sm transition active:scale-95 cursor-pointer" do %>
+        <svg class="w-3.5 h-3.5 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span><%= @memory.embedded? ? "Re-vectorize" : "Vectorize" %></span>
+      <% end %>
+
       <!-- Pin / Unpin Button -->
       <%= button_to toggle_pin_memory_path(@memory),
                     method: :patch,
@@ -166,4 +188,35 @@
   <div class="pt-6 border-t border-neutral-800/80">
     <%= render "memories/attachments", memory: @memory %>
   </div>
+
+  <!-- Semantically Related Memories -->
+  <% if @neighbors.present? %>
+    <div class="pt-6 border-t border-neutral-800/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-neutral-200 flex items-center gap-2">
+          <svg class="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Semantically Related Memories
+        </h3>
+        <span class="text-xs font-mono text-neutral-500">Nearest neighbors via pgvector</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <% @neighbors.each do |neighbor| %>
+          <div class="p-4 bg-neutral-900/60 border border-neutral-800 rounded-xl hover:border-violet-500/50 transition">
+            <div class="flex items-center justify-between text-xs font-mono text-neutral-500 mb-2">
+              <span class="text-emerald-400 font-semibold">
+                <%= ((1.0 - neighbor.try(:neighbor_distance).to_f) * 100).round(1) %>% match
+              </span>
+              <span><%= time_ago_in_words(neighbor.updated_at) %> ago</span>
+            </div>
+            <%= link_to neighbor.title, memory_path(neighbor), class: "font-medium text-sm text-neutral-200 hover:text-violet-300 block mb-1 truncate" %>
+            <p class="text-xs text-neutral-400 font-mono line-clamp-2 leading-relaxed">
+              <%= neighbor.body.presence || "(Empty body)" %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 </div>

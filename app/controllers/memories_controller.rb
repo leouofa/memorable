@@ -1,8 +1,9 @@
 class MemoriesController < ApplicationController
-  before_action :set_memory, only: %i[show edit update destroy toggle_pin attach_files purge_attachment]
+  before_action :set_memory, only: %i[show edit update destroy toggle_pin attach_files purge_attachment generate_embedding]
 
   def index
     @scope = params[:scope].presence || "all"
+    @mode = params[:mode].presence || "auto"
 
     base_scope = if params[:pinned].to_s == "true"
       Memory.pinned
@@ -11,13 +12,31 @@ class MemoriesController < ApplicationController
     end
 
     @memories = if params[:q].present?
-      base_scope.search(params[:q])
+      if (@mode == "semantic" || @mode == "auto") && base_scope.embedded.exists?
+        begin
+          embedding_res = Llm::EmbeddingGenerator.call(params[:q])
+          base_scope.embedded.nearest_neighbors(:embedding, embedding_res[:vector], distance: "cosine")
+        rescue StandardError => e
+          Rails.logger.warn("[MemoriesController] Semantic search fallback to keyword: #{e.message}")
+          base_scope.search(params[:q])
+        end
+      else
+        base_scope.search(params[:q])
+      end
     else
       base_scope
     end
   end
 
   def show
+    @neighbors = if @memory.embedded?
+      Memory.where.not(id: @memory.id)
+            .embedded
+            .nearest_neighbors(:embedding, @memory.embedding, distance: "cosine")
+            .limit(4)
+    else
+      []
+    end
   end
 
   def new
@@ -113,6 +132,13 @@ class MemoriesController < ApplicationController
         )
       end
     end
+  end
+
+  def generate_embedding
+    @memory.generate_embedding!
+    redirect_to @memory, notice: "Vector embedding generated successfully (#{@memory.embedding_model})."
+  rescue StandardError => e
+    redirect_to @memory, alert: "Failed to generate embedding: #{e.message}"
   end
 
   private

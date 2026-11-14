@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     end
     member do
       patch :toggle_pin
+      post :generate_embedding
       post :attach_files
       delete "attachments/:attachment_id", to: "memories#purge_attachment", as: :attachment
     end
@@ -16,6 +17,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      get "search", to: "search#index"
       get "openapi", to: "openapi#show", as: :openapi
       get "stats", to: "stats#show"
       post "markdown/render", to: "markdown#render_text"
@@ -26,6 +28,8 @@ Rails.application.routes.draw do
         end
         member do
           patch :toggle_pin
+          get :neighbors
+          post :generate_embedding
           get :attachments, to: "memory_attachments#index"
           post :attachments, to: "memory_attachments#create"
           delete "attachments/:attachment_id", to: "memory_attachments#destroy", as: :attachment
