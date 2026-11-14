@@ -2,10 +2,16 @@
   <div>
     <!-- Top row: Badge & Pin/Copy Buttons -->
     <div class="flex items-center justify-between gap-2 mb-2">
-      <div class="relative z-10 pointer-events-none">
+      <div class="relative z-10 pointer-events-none flex items-center gap-1.5">
         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-mono bg-violet-950/60 text-violet-400 border border-violet-800/40">
           Memory
         </span>
+        <% if memory.embedded? %>
+          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-400 border border-emerald-800/40" title="Vector embedded: <%= memory.embedding_model %>">
+            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+            Vectorized
+          </span>
+        <% end %>
       </div>
 
       <!-- Action Buttons: Pin & Copy -->

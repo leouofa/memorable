@@ -119,4 +119,38 @@ class MemoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: "Pinned Memories"
     assert_select "[data-controller='pinned-sortable'] a", text: @memory.title
   end
+
+  test "should generate embedding via generate_embedding action" do
+    fake_vector = Array.new(1024) { 0.1 }
+    singleton = Llm::EmbeddingGenerator.singleton_class
+    original = Llm::EmbeddingGenerator.method(:call)
+    singleton.define_method(:call) do |_text, **_kwargs|
+      { vector: fake_vector, model: "qwen3-embedding:0.6b" }
+    end
+
+    begin
+      post generate_embedding_memory_url(@memory)
+      assert_redirected_to memory_url(@memory)
+      assert_equal "Vector embedding generated successfully (qwen3-embedding:0.6b).", flash[:notice]
+      assert @memory.reload.embedded?
+    ensure
+      singleton.define_method(:call, original)
+    end
+  end
+
+  test "show displays semantically related memories when embedded" do
+    v1 = Array.new(1024, 0.0)
+    v1[0] = 1.0
+
+    v2 = Array.new(1024, 0.0)
+    v2[0] = 0.95
+
+    @memory.update!(embedding: v1, embedding_model: "qwen3-embedding:0.6b", embedded_at: Time.current)
+    neighbor = Memory.create!(title: "Semantically Related Note", body: "Related details", embedding: v2, embedding_model: "qwen3-embedding:0.6b", embedded_at: Time.current)
+
+    get memory_url(@memory)
+    assert_response :success
+    assert_select "h3", text: /Semantically Related Memories/
+    assert_select "a", text: neighbor.title
+  end
 end

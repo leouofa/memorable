@@ -100,6 +100,94 @@ module Api
         assert_equal 1, m2.reload.pinned_position
         assert_equal 2, m1.reload.pinned_position
       end
+
+      test "memory json includes embedding metadata" do
+        get api_v1_memory_url(@memory)
+        assert_response :success
+        json = response.parsed_body
+        assert json.key?("embedded")
+        assert json.key?("embedding_model")
+        assert json.key?("embedded_at")
+        assert_equal false, json["embedded"]
+      end
+
+      test "neighbors returns 422 if memory has no embedding" do
+        get neighbors_api_v1_memory_url(@memory)
+        assert_response :unprocessable_entity
+        json = response.parsed_body
+        assert_includes json["error"], "not been embedded yet"
+      end
+
+      test "neighbors returns nearest memories when embedded" do
+        v1 = Array.new(1024, 0.0)
+        v1[0] = 1.0
+
+        v2 = Array.new(1024, 0.0)
+        v2[0] = 0.95
+
+        @memory.update!(embedding: v1, embedding_model: "qwen3-embedding:0.6b", embedded_at: Time.current)
+        neighbor = Memory.create!(title: "Neighbor Memory", embedding: v2, embedding_model: "qwen3-embedding:0.6b", embedded_at: Time.current)
+
+        get neighbors_api_v1_memory_url(@memory)
+        assert_response :success
+        json = response.parsed_body
+        assert_equal "ok", json["status"]
+        assert_equal 1, json["neighbors"].size
+        assert_equal neighbor.id, json["neighbors"].first["memory"]["id"]
+        assert json["neighbors"].first["score"] > 0.9
+      end
+
+      test "generate_embedding generates embedding synchronously by default" do
+        fake_vector = Array.new(1024) { 0.1 }
+        singleton = Llm::EmbeddingGenerator.singleton_class
+        original = Llm::EmbeddingGenerator.method(:call)
+        singleton.define_method(:call) do |_text, **_kwargs|
+          { vector: fake_vector, model: "qwen3-embedding:0.6b" }
+        end
+
+        begin
+          post generate_embedding_api_v1_memory_url(@memory)
+          assert_response :success
+          json = response.parsed_body
+          assert_equal "ok", json["status"]
+          assert_equal true, json["memory"]["embedded"]
+          assert_equal "qwen3-embedding:0.6b", json["memory"]["embedding_model"]
+        ensure
+          singleton.define_method(:call, original)
+        end
+      end
+
+      test "generate_embedding with async enqueues job" do
+        assert_enqueued_with(job: GenerateEmbeddingJob, args: [ @memory.id ]) do
+          post generate_embedding_api_v1_memory_url(@memory, async: true)
+          assert_response :success
+          json = response.parsed_body
+          assert_equal "ok", json["status"]
+          assert_includes json["message"], "enqueued"
+        end
+      end
+
+      test "index supports semantic mode" do
+        v = Array.new(1024, 0.0)
+        v[0] = 1.0
+        @memory.update!(embedding: v, embedding_model: "qwen3-embedding:0.6b", embedded_at: Time.current)
+
+        singleton = Llm::EmbeddingGenerator.singleton_class
+        original = Llm::EmbeddingGenerator.method(:call)
+        singleton.define_method(:call) do |_text, **_kwargs|
+          { vector: v, model: "qwen3-embedding:0.6b" }
+        end
+
+        begin
+          get api_v1_memories_url(q: "something", mode: "semantic")
+          assert_response :success
+          json = response.parsed_body
+          assert_equal 1, json["memories"].size
+          assert_equal @memory.id, json["memories"].first["id"]
+        ensure
+          singleton.define_method(:call, original)
+        end
+      end
     end
   end
 end

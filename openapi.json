@@ -16,15 +16,33 @@
     "url": "https://github.com/leouofa/memorable"
   },
   "tags": [
-    { "name": "Memories", "description": "Manage saved context and long-term memories" },
-    { "name": "Attachments", "description": "Manage file attachments associated with memories" },
-    { "name": "Markdown", "description": "Markdown rendering and preview services" },
-    { "name": "System", "description": "System health, statistics, and platform metadata" }
+    {
+      "name": "Memories",
+      "description": "Manage saved context and long-term memories"
+    },
+    {
+      "name": "Search",
+      "description": "Unified semantic and keyword vector search across memories"
+    },
+    {
+      "name": "Attachments",
+      "description": "Manage file attachments associated with memories"
+    },
+    {
+      "name": "Markdown",
+      "description": "Markdown rendering and preview services"
+    },
+    {
+      "name": "System",
+      "description": "System health, statistics, and platform metadata"
+    }
   ],
   "paths": {
     "/api/v1/stats": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get system statistics",
         "description": "Returns counts of total memories, pinned memories, and attachments.",
         "responses": {
@@ -32,7 +50,9 @@
             "description": "Current platform statistics",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Stats" }
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
+                }
               }
             }
           }
@@ -41,7 +61,9 @@
     },
     "/api/v1/openapi": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get OpenAPI schema specification",
         "description": "Returns the complete OpenAPI 3.1.0 JSON schema for the Memorable API.",
         "responses": {
@@ -49,7 +71,9 @@
             "description": "OpenAPI schema document",
             "content": {
               "application/json": {
-                "schema": { "type": "object" }
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           }
@@ -58,7 +82,9 @@
     },
     "/api/v1/markdown/render": {
       "post": {
-        "tags": ["Markdown"],
+        "tags": [
+          "Markdown"
+        ],
         "summary": "Render Markdown text to HTML",
         "description": "Parses and sanitizes GitHub Flavored Markdown into safe HTML.",
         "requestBody": {
@@ -68,9 +94,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "text": { "type": "string", "description": "Raw markdown text to render" }
+                  "text": {
+                    "type": "string",
+                    "description": "Raw markdown text to render"
+                  }
                 },
-                "required": ["text"]
+                "required": [
+                  "text"
+                ]
               }
             }
           }
@@ -83,7 +114,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "html": { "type": "string" }
+                    "html": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -94,14 +127,58 @@
     },
     "/api/v1/memories": {
       "get": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "List memories",
         "description": "Returns a paginated list of memories with optional filtering.",
         "parameters": [
-          { "name": "pinned", "in": "query", "schema": { "type": "boolean" }, "description": "Filter by pinned status" },
-          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Search term across title and body" },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } },
-          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+          {
+            "name": "pinned",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by pinned status"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term across title and body"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "semantic",
+                "keyword"
+              ],
+              "default": "auto"
+            },
+            "description": "Search mode when q is provided"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -111,8 +188,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "memories": { "type": "array", "items": { "$ref": "#/components/schemas/Memory" } },
-                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                    "memories": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Memory"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PaginationMeta"
+                    }
                   }
                 }
               }
@@ -121,7 +205,9 @@
         }
       },
       "post": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Create a new memory",
         "requestBody": {
           "required": true,
@@ -133,14 +219,24 @@
                   "memory": {
                     "type": "object",
                     "properties": {
-                      "title": { "type": "string" },
-                      "body": { "type": "string" },
-                      "pinned": { "type": "boolean" }
+                      "title": {
+                        "type": "string"
+                      },
+                      "body": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      }
                     },
-                    "required": ["title"]
+                    "required": [
+                      "title"
+                    ]
                   }
                 },
-                "required": ["memory"]
+                "required": [
+                  "memory"
+                ]
               }
             }
           }
@@ -150,17 +246,23 @@
             "description": "Created memory",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MemoryDetail" }
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDetail"
+                }
               }
             }
           },
-          "422": { "$ref": "#/components/responses/ValidationError" }
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
         }
       }
     },
     "/api/v1/memories/reorder_pinned": {
       "patch": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Reorder pinned memories",
         "requestBody": {
           "required": true,
@@ -171,10 +273,14 @@
                 "properties": {
                   "memory_ids": {
                     "type": "array",
-                    "items": { "type": "integer" }
+                    "items": {
+                      "type": "integer"
+                    }
                   }
                 },
-                "required": ["memory_ids"]
+                "required": [
+                  "memory_ids"
+                ]
               }
             }
           }
@@ -184,7 +290,9 @@
             "description": "Reordering successful",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/StatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
               }
             }
           }
@@ -193,28 +301,49 @@
     },
     "/api/v1/memories/{id}": {
       "parameters": [
-        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
       ],
       "get": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Get memory details",
         "parameters": [
-          { "name": "render_markdown", "in": "query", "schema": { "type": "boolean" } }
+          {
+            "name": "render_markdown",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
         ],
         "responses": {
           "200": {
             "description": "Memory details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MemoryDetail" }
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDetail"
+                }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       },
       "patch": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Update memory",
         "requestBody": {
           "required": true,
@@ -226,10 +355,18 @@
                   "memory": {
                     "type": "object",
                     "properties": {
-                      "title": { "type": "string" },
-                      "body": { "type": "string" },
-                      "pinned": { "type": "boolean" },
-                      "pinned_position": { "type": "integer" }
+                      "title": {
+                        "type": "string"
+                      },
+                      "body": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      },
+                      "pinned_position": {
+                        "type": "integer"
+                      }
                     }
                   }
                 }
@@ -242,36 +379,57 @@
             "description": "Updated memory",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MemoryDetail" }
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryDetail"
+                }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" },
-          "422": { "$ref": "#/components/responses/ValidationError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
         }
       },
       "delete": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Delete memory",
         "responses": {
           "200": {
             "description": "Memory deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/StatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       }
     },
     "/api/v1/memories/{id}/toggle_pin": {
       "parameters": [
-        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
       ],
       "patch": {
-        "tags": ["Memories"],
+        "tags": [
+          "Memories"
+        ],
         "summary": "Toggle pinned state of memory",
         "responses": {
           "200": {
@@ -281,25 +439,47 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string" },
-                    "pinned": { "type": "boolean" },
-                    "pinned_position": { "type": ["integer", "null"] },
-                    "memory": { "$ref": "#/components/schemas/Memory" }
+                    "status": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinned_position": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "memory": {
+                      "$ref": "#/components/schemas/Memory"
+                    }
                   }
                 }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       }
     },
     "/api/v1/memories/{id}/attachments": {
       "parameters": [
-        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
       ],
       "get": {
-        "tags": ["Attachments"],
+        "tags": [
+          "Attachments"
+        ],
         "summary": "List attachments of a memory",
         "responses": {
           "200": {
@@ -309,17 +489,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } }
+                    "attachments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Attachment"
+                      }
+                    }
                   }
                 }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       },
       "post": {
-        "tags": ["Attachments"],
+        "tags": [
+          "Attachments"
+        ],
         "summary": "Attach files to memory",
         "requestBody": {
           "required": true,
@@ -328,9 +517,17 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "files": { "type": "array", "items": { "type": "string", "format": "binary" } }
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
                 },
-                "required": ["files"]
+                "required": [
+                  "files"
+                ]
               }
             }
           }
@@ -343,36 +540,299 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string" },
-                    "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } }
+                    "status": {
+                      "type": "string"
+                    },
+                    "attachments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Attachment"
+                      }
+                    }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/ErrorResponse" },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       }
     },
     "/api/v1/memories/{id}/attachments/{attachment_id}": {
       "parameters": [
-        { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
-        { "name": "attachment_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "attachment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
       ],
       "delete": {
-        "tags": ["Attachments"],
+        "tags": [
+          "Attachments"
+        ],
         "summary": "Purge memory attachment",
         "responses": {
           "200": {
             "description": "Attachment removed",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/StatusResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
               }
             }
           },
-          "404": { "$ref": "#/components/responses/NotFoundError" }
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Unified vector and keyword search across memories",
+        "description": "Performs nearest-neighbor semantic search using pgvector cosine similarity or keyword search across memories.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query text"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "semantic",
+                "keyword"
+              ],
+              "default": "auto"
+            },
+            "description": "Search mode: semantic, keyword, or auto"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Maximum number of results to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results ordered by relevance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "Memory"
+                          },
+                          "score": {
+                            "type": [
+                              "number",
+                              "null"
+                            ],
+                            "example": 0.912345
+                          },
+                          "data": {
+                            "$ref": "#/components/schemas/Memory"
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "type": "string"
+                        },
+                        "query": {
+                          "type": "string"
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          }
+        }
+      }
+    },
+    "/api/v1/memories/{id}/neighbors": {
+      "get": {
+        "tags": [
+          "Memories",
+          "Search"
+        ],
+        "summary": "Find nearest semantic neighbors of a memory",
+        "description": "Finds related memories using pgvector 1024-dimensional cosine distance.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Memory ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Number of nearest neighbors to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Neighboring memories ordered by similarity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "memory": {
+                      "$ref": "#/components/schemas/Memory"
+                    },
+                    "neighbors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "score": {
+                            "type": "number",
+                            "example": 0.892
+                          },
+                          "memory": {
+                            "$ref": "#/components/schemas/Memory"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/v1/memories/{id}/generate_embedding": {
+      "post": {
+        "tags": [
+          "Memories"
+        ],
+        "summary": "Generate or refresh vector embedding for a memory",
+        "description": "Computes a 1024-dimensional embedding for the memory using the configured Ollama embedding model.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Memory ID"
+          },
+          {
+            "name": "async",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Whether to enqueue as a background job"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Embedding generated or enqueued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "memory": {
+                      "$ref": "#/components/schemas/Memory"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
         }
       }
     }
@@ -382,24 +842,73 @@
       "Memory": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
-          "title": { "type": "string" },
-          "body": { "type": "string" },
-          "pinned": { "type": "boolean" },
-          "pinned_position": { "type": ["integer", "null"] },
-          "attachments_count": { "type": "integer" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "pinned_position": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "attachments_count": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "embedded": {
+            "type": "boolean",
+            "description": "Whether vector embedding is present"
+          },
+          "embedding_model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Model used for embedding"
+          },
+          "embedded_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Timestamp when embedding was generated"
+          }
         }
       },
       "MemoryDetail": {
         "allOf": [
-          { "$ref": "#/components/schemas/Memory" },
+          {
+            "$ref": "#/components/schemas/Memory"
+          },
           {
             "type": "object",
             "properties": {
-              "rendered_html": { "type": "string" },
-              "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } }
+              "rendered_html": {
+                "type": "string"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Attachment"
+                }
+              }
             }
           }
         ]
@@ -407,42 +916,78 @@
       "Attachment": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
-          "filename": { "type": "string" },
-          "content_type": { "type": "string" },
-          "byte_size": { "type": "integer" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "url": { "type": "string" }
+          "id": {
+            "type": "integer"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "byte_size": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          }
         }
       },
       "Stats": {
         "type": "object",
         "properties": {
-          "total_memories": { "type": "integer" },
-          "pinned_memories": { "type": "integer" },
-          "total_attachments": { "type": "integer" }
+          "total_memories": {
+            "type": "integer"
+          },
+          "pinned_memories": {
+            "type": "integer"
+          },
+          "total_attachments": {
+            "type": "integer"
+          }
         }
       },
       "PaginationMeta": {
         "type": "object",
         "properties": {
-          "limit": { "type": "integer" },
-          "offset": { "type": "integer" },
-          "total_count": { "type": "integer" }
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total_count": {
+            "type": "integer"
+          }
         }
       },
       "StatusResponse": {
         "type": "object",
         "properties": {
-          "status": { "type": "string" },
-          "message": { "type": "string" }
+          "status": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "error": { "type": "string" },
-          "details": { "type": "array", "items": { "type": "string" } }
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -451,7 +996,9 @@
         "description": "Error response",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/Error" }
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
           }
         }
       },
@@ -459,7 +1006,9 @@
         "description": "Resource not found",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/Error" }
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
           }
         }
       },
@@ -467,7 +1016,9 @@
         "description": "Validation failed",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/Error" }
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
           }
         }
       }
