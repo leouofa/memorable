@@ -16,7 +16,7 @@
     "url": "https://github.com/leouofa/memorable"
   },
   "tags": [
-    { "name": "Memories", "description": "Manage memory scratchpads, notes, and pinned memories" },
+    { "name": "Memories", "description": "Manage saved context and long-term memories" },
     { "name": "Attachments", "description": "Manage file attachments associated with memories" },
     { "name": "Markdown", "description": "Markdown rendering and preview services" },
     { "name": "System", "description": "System health, statistics, and platform metadata" }
