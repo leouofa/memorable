@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -58,6 +58,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_130000) do
     t.index ["updated_at"], name: "index_memories_on_updated_at"
   end
 
+  create_table "memory_versions", force: :cascade do |t|
+    t.bigint "memory_id", null: false
+    t.integer "version_number", null: false
+    t.string "title", null: false
+    t.text "body", default: "", null: false
+    t.datetime "created_at", null: false
+    t.index ["memory_id", "created_at"], name: "index_memory_versions_on_memory_id_and_created_at"
+    t.index ["memory_id", "version_number"], name: "index_memory_versions_on_memory_id_and_version_number", unique: true
+    t.index ["memory_id"], name: "index_memory_versions_on_memory_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "memory_versions", "memories", on_delete: :cascade
 end

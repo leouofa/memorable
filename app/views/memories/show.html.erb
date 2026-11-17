@@ -39,6 +39,13 @@
           Memory
         </span>
 
+        <%= link_to memory_versions_path(@memory),
+                    id: "memory_version_badge",
+                    title: "View version history",
+                    class: "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700/60 transition" do %>
+          <span>v<%= @memory.current_version_number %></span>
+        <% end %>
+
         <% if @memory.embedded? %>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950/70 text-emerald-400 border border-emerald-800/50" title="Embedded <%= time_ago_in_words(@memory.embedded_at) if @memory.embedded_at %> ago">
             <svg class="w-2 h-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
@@ -57,6 +64,17 @@
 
     <!-- Actions Toolbar -->
     <div class="flex items-center gap-2 flex-wrap">
+      <!-- Version History Link Button -->
+      <%= link_to memory_versions_path(@memory),
+                  id: "memory_history_button",
+                  title: "Version history and diffs",
+                  class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white border border-neutral-700/60 shadow-sm transition active:scale-95 cursor-pointer" do %>
+        <svg class="w-3.5 h-3.5 shrink-0 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>History (v<%= @memory.current_version_number %>)</span>
+      <% end %>
+
       <!-- Generate / Update Vector Embedding Button -->
       <%= button_to generate_embedding_memory_path(@memory),
                     method: :post,
