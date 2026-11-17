@@ -57,10 +57,15 @@ class MemoriesController < ApplicationController
   end
 
   def update
+    auto_save = params[:auto_save].to_s == "1" || params[:auto_save].to_s == "true"
+    @memory.skip_versioning = auto_save
+
     if @memory.update(memory_params)
+      @memory.record_version_snapshot! unless auto_save
+
       respond_to do |format|
         format.html { redirect_to @memory, notice: "Memory updated successfully." }
-        format.json { render json: { status: :ok, memory: @memory } }
+        format.json { render json: { status: :ok, memory: @memory, version_number: @memory.current_version_number } }
         format.turbo_stream
       end
     else
